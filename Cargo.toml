@@ -1,0 +1,19 @@
+[package]
+name = "ramkoers-puzzel"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+panic = "abort"
+
+[profile.dev]
+panic = "abort"
+
+[dependencies]
+panic-halt = "0.2.0"
+ufmt = "0.2.0"
+
+[dependencies.arduino-hal]
+git = "https://www.github.com/Rahix/avr-hal"
+rev = "15080aa41e726bc720adf36ce0fc5a030390c822"
+features = [ "arduino-uno" ]
