@@ -2,33 +2,10 @@
 #![no_main]
 
 use core::panic::PanicInfo;
-
 use ufmt::derive::uDebug;
 
-#[derive(uDebug, PartialEq)]
-enum Direction {
-    North,
-    NorthWest,
-    NorthEast,
-    East,
-    West,
-}
-
-impl Direction {
-    fn from_angle(angle: u16) -> Self {
-        if angle <= 36 {
-            Direction::West
-        } else if angle <= 72 {
-            Direction::NorthWest
-        } else if angle <= 108 {
-            Direction::North
-        } else if angle <= 144 {
-            Direction::NorthEast
-        } else {
-            Direction::East
-        }
-    }
-}
+mod metrics;
+use metrics::{Direction, Power};
 
 #[derive(uDebug)]
 enum Stage {
@@ -40,10 +17,10 @@ enum Stage {
 }
 
 impl Stage {
-    fn transition(self: Self, direction: Direction, power: u16) -> Self {
+    fn transition(self: Self, direction: Direction, power: Power) -> Self {
         match self {
             Stage::Start => {
-                if direction == Direction::North && power == 100 {
+                if direction == Direction::North {
                     Stage::Step1
                 } else {
                     Stage::Start
@@ -51,6 +28,16 @@ impl Stage {
             },
             Stage::Step1 => Stage::Start,
             s => s,
+        }
+    }
+
+    fn leds(self: Self) {
+        match self {
+            Stage::Complete => loop {
+                // TODO: show final sequence
+            }
+            // TODO: other LEDS
+            s => {}
         }
     }
 }
@@ -63,9 +50,12 @@ fn main() -> ! {
     let mut serial = arduino_hal::default_serial!(p, pins, 115200);
 
     let mut led = pins.d13.into_output();
-    let pot = pins.a5.into_analog_input(&mut adc);
+    let pot = pins.a0.into_analog_input(&mut adc);
 
     let mut stage = Stage::Start;
+    let mut prev_direction = Direction::North;
+    let mut prev_power = Power::Low;
+    let mut steps = 0;
 
     loop {
         let value = pot.analog_read(&mut adc);
@@ -73,14 +63,31 @@ fn main() -> ! {
         let direction: Direction = Direction::from_angle(angle);
 
         // TODO: make this use the sliding potmeter
-        let power = 100;
+        let value = 500;
+        let speed = map(value, 1023, 100);
+        let power = Power::from_speed(speed);
 
-        ufmt::uwriteln!(serial, "\rangle: {} -> {:?}, power: {}", angle, direction, power).unwrap();
-        stage = stage.transition(direction, power);
-        ufmt::uwriteln!(serial, "\rstage: {:?}", stage).unwrap();
+        // Reset timer if changed
+        if direction != prev_direction || power != prev_power {
+            prev_direction = direction;
+            prev_power = power;
+            steps = 0;
+        } else {
+            steps += 1;
+        }
 
+        ufmt::uwriteln!(serial, "\rangle: {} -> {:?}, power: {} -> {:?}", angle, direction, speed, power).unwrap();
+
+        // After 5 seconds in the same stage, check for transition
+        if steps == 5 {
+            stage = stage.transition(direction, power);
+            //stage.leds();
+            steps = 0;
+            ufmt::uwriteln!(serial, "\rstage: {:?}", stage).unwrap();
+        }
         led.toggle();
         arduino_hal::delay_ms(1000);
+
         // TODO: make servo work
     }
 }
