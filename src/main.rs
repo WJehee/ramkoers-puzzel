@@ -3,7 +3,57 @@
 
 use core::panic::PanicInfo;
 
-use arduino_hal::{hal::port::Dynamic, port::{mode::Analog, Pin}, Adc};
+use ufmt::derive::uDebug;
+
+#[derive(uDebug, PartialEq)]
+enum Direction {
+    North,
+    NorthWest,
+    NorthEast,
+    East,
+    West,
+}
+
+impl Direction {
+    fn from_angle(angle: u16) -> Self {
+        if angle <= 36 {
+            Direction::West
+        } else if angle <= 72 {
+            Direction::NorthWest
+        } else if angle <= 108 {
+            Direction::North
+        } else if angle <= 144 {
+            Direction::NorthEast
+        } else {
+            Direction::East
+        }
+    }
+}
+
+#[derive(uDebug)]
+enum Stage {
+    Start,
+    Step1,
+    Step2,
+    Step3,
+    Complete,
+}
+
+impl Stage {
+    fn transition(self: Self, direction: Direction, power: u16) -> Self {
+        match self {
+            Stage::Start => {
+                if direction == Direction::North && power == 100 {
+                    Stage::Step1
+                } else {
+                    Stage::Start
+                }
+            },
+            Stage::Step1 => Stage::Start,
+            s => s,
+        }
+    }
+}
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -13,39 +63,33 @@ fn main() -> ! {
     let mut serial = arduino_hal::default_serial!(p, pins, 115200);
 
     let mut led = pins.d13.into_output();
-
     let pot = pins.a5.into_analog_input(&mut adc);
 
-    //let pot = Pot {
-    //    pot,
-    //    adc,
-    //};
+    let mut stage = Stage::Start;
 
     loop {
-        // 0-1023
         let value = pot.analog_read(&mut adc);
-        // TODO: map to angle in 0-180 range
-        // TODO: make servo work
+        let angle = map(value, 1023, 180);
+        let direction: Direction = Direction::from_angle(angle);
 
-        ufmt::uwriteln!(serial, "\rangle: {}", value).unwrap();
+        // TODO: make this use the sliding potmeter
+        let power = 100;
+
+        ufmt::uwriteln!(serial, "\rangle: {} -> {:?}, power: {}", angle, direction, power).unwrap();
+        stage = stage.transition(direction, power);
+        ufmt::uwriteln!(serial, "\rstage: {:?}", stage).unwrap();
 
         led.toggle();
         arduino_hal::delay_ms(1000);
+        // TODO: make servo work
     }
 }
 
-//struct Pot {
-//    pot: Pin<Analog, Dynamic>,
-//    adc: Adc,
-//}
-//
-//impl Pot {
-//    fn angle(mut self: Self) -> u16 {
-//        let value = self.pot.analog_read(&mut self.adc);
-//        let angle = value;
-//        angle
-//    }
-//}
+/// Maps values from 1 range to another range, assumes the minimum is 0 for both
+fn map(val: u16, max_original: u16, max_result: u16) -> u16 {
+    let fraction = val as f32 / max_original as f32;
+    (max_result as f32 * fraction) as u16
+}
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {

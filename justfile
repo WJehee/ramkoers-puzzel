@@ -1,4 +1,4 @@
-path := "target/avr-atmega328p/release/embedded.elf"
+path := "target/avr-atmega328p/release/ramkoers-puzzel.elf"
 device := "/dev/ttyACM0"
 
 _default:
