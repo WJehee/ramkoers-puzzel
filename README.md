@@ -12,6 +12,6 @@ This code runs one of the puzzles.
 
 ## Thanks
 
-- [Rahix for avr-hal and their various posts](https://blog.rahix.de/005-avr-hal-millis/)
-- [chrisjpalmer, servos](https://github.com/chrisjpalmer/rust-arduino-servo/tree/main)
+- [Rahix for avr-hal](https://github.com/Rahix/avr-hal)
+- [chrisjpalmer for the servo code](https://github.com/chrisjpalmer/rust-arduino-servo/tree/main)
 
