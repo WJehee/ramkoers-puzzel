@@ -1,5 +1,5 @@
 use ufmt::derive::uDebug;
-use arduino_hal::port::{mode::Output, Pin, D9, D10, D11, D12};
+use arduino_hal::port::{mode::Output, Pin, D10, D11, D12, D13};
 
 use crate::metrics::{Direction, Power};
 
@@ -53,20 +53,20 @@ impl Stage {
 }
 
 pub struct Leds {
-    pub led0: Pin<Output, D9>,
-    pub led1: Pin<Output, D10>,
-    pub led2: Pin<Output, D11>,
-    pub led3: Pin<Output, D12>,
+    pub led0: Pin<Output, D10>,
+    pub led1: Pin<Output, D11>,
+    pub led2: Pin<Output, D12>,
+    pub led3: Pin<Output, D13>,
     counts: [u8; 4],
     blink: bool,
 }
 
 impl Leds {
     pub fn new(
-        led0: Pin<Output, D9>,
-        led1: Pin<Output, D10>,
-        led2: Pin<Output, D11>,
-        led3: Pin<Output, D12>,
+        led0: Pin<Output, D10>,
+        led1: Pin<Output, D11>,
+        led2: Pin<Output, D12>,
+        led3: Pin<Output, D13>,
     ) -> Self {
         Leds {
             led0, led1, led2, led3,
