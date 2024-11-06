@@ -1,46 +1,12 @@
 #![no_std]
 #![no_main]
 
-use core::panic::PanicInfo;
-use ufmt::derive::uDebug;
-
 mod metrics;
+mod stages;
+
+use core::panic::PanicInfo;
+use stages::{Stage, Leds};
 use metrics::{Direction, Power};
-
-#[derive(uDebug)]
-enum Stage {
-    Start,
-    Step1,
-    Step2,
-    Step3,
-    Complete,
-}
-
-impl Stage {
-    fn transition(self: Self, direction: Direction, power: Power) -> Self {
-        match self {
-            Stage::Start => {
-                if direction == Direction::North {
-                    Stage::Step1
-                } else {
-                    Stage::Start
-                }
-            },
-            Stage::Step1 => Stage::Start,
-            s => s,
-        }
-    }
-
-    fn leds(self: Self) {
-        match self {
-            Stage::Complete => loop {
-                // TODO: show final sequence
-            }
-            // TODO: other LEDS
-            s => {}
-        }
-    }
-}
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -49,8 +15,15 @@ fn main() -> ! {
     let mut adc = arduino_hal::Adc::new(p.ADC, Default::default());
     let mut serial = arduino_hal::default_serial!(p, pins, 115200);
 
+    let steering = pins.a0.into_analog_input(&mut adc);
+    let slider = pins.a1.into_analog_input(&mut adc);
     let mut led = pins.d13.into_output();
-    let pot = pins.a0.into_analog_input(&mut adc);
+    let mut leds = Leds {
+        led0: pins.d9.into_output(),
+        led1: pins.d10.into_output(),
+        led2: pins.d11.into_output(),
+        led3: pins.d12.into_output(),
+    };
 
     let mut stage = Stage::Start;
     let mut prev_direction = Direction::North;
@@ -58,12 +31,11 @@ fn main() -> ! {
     let mut steps = 0;
 
     loop {
-        let value = pot.analog_read(&mut adc);
+        let value = steering.analog_read(&mut adc);
         let angle = map(value, 1023, 180);
         let direction: Direction = Direction::from_angle(angle);
 
-        // TODO: make this use the sliding potmeter
-        let value = 500;
+        let value = slider.analog_read(&mut adc);
         let speed = map(value, 1023, 100);
         let power = Power::from_speed(speed);
 
@@ -81,8 +53,15 @@ fn main() -> ! {
         // After 5 seconds in the same stage, check for transition
         if steps == 5 {
             stage = stage.transition(direction, power);
-            //stage.leds();
             steps = 0;
+
+            leds.set(stage);
+            ufmt::uwriteln!(serial, "{:?} {:?} {:?} {:?}",
+                leds.led0.is_set_high(),
+                leds.led1.is_set_high(),
+                leds.led2.is_set_high(),
+                leds.led3.is_set_high(),
+            ).unwrap();
             ufmt::uwriteln!(serial, "\rstage: {:?}", stage).unwrap();
         }
         led.toggle();
