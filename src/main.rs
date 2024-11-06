@@ -18,14 +18,14 @@ fn main() -> ! {
     let steering = pins.a0.into_analog_input(&mut adc);
     let slider = pins.a1.into_analog_input(&mut adc);
     let mut led = pins.d13.into_output();
-    let mut leds = Leds {
-        led0: pins.d9.into_output(),
-        led1: pins.d10.into_output(),
-        led2: pins.d11.into_output(),
-        led3: pins.d12.into_output(),
-    };
+    let mut leds = Leds::new(
+        pins.d9.into_output(),
+        pins.d10.into_output(),
+        pins.d11.into_output(),
+        pins.d12.into_output(),
+    );
 
-    let mut stage = Stage::Start;
+    let mut stage = Stage::Complete;
     let mut prev_direction = Direction::North;
     let mut prev_power = Power::Low;
     let mut steps = 0;
@@ -34,6 +34,8 @@ fn main() -> ! {
         let value = steering.analog_read(&mut adc);
         let angle = map(value, 1023, 180);
         let direction: Direction = Direction::from_angle(angle);
+
+        // TODO: make servo work
 
         let value = slider.analog_read(&mut adc);
         let speed = map(value, 1023, 100);
@@ -48,26 +50,24 @@ fn main() -> ! {
             steps += 1;
         }
 
-        ufmt::uwriteln!(serial, "\rangle: {} -> {:?}, power: {} -> {:?}", angle, direction, speed, power).unwrap();
+        //ufmt::uwriteln!(serial, "\rangle: {} -> {:?}, power: {} -> {:?}", angle, direction, speed, power).unwrap();
 
         // After 5 seconds in the same stage, check for transition
         if steps == 5 {
             stage = stage.transition(direction, power);
             steps = 0;
-
-            leds.set(stage);
-            ufmt::uwriteln!(serial, "{:?} {:?} {:?} {:?}",
-                leds.led0.is_set_high(),
-                leds.led1.is_set_high(),
-                leds.led2.is_set_high(),
-                leds.led3.is_set_high(),
-            ).unwrap();
-            ufmt::uwriteln!(serial, "\rstage: {:?}", stage).unwrap();
+            //ufmt::uwriteln!(serial, "\rstage: {:?}", stage).unwrap();
         }
-        led.toggle();
-        arduino_hal::delay_ms(1000);
 
-        // TODO: make servo work
+        leds.set(stage);
+        ufmt::uwriteln!(serial, "{:?} {:?} {:?} {:?}",
+            leds.led0.is_set_high(),
+            leds.led1.is_set_high(),
+            leds.led2.is_set_high(),
+            leds.led3.is_set_high(),
+        ).unwrap();
+
+        arduino_hal::delay_ms(1000);
     }
 }
 
