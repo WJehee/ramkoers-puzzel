@@ -1,10 +1,10 @@
 use ufmt::derive::uDebug;
-use arduino_hal::port::{mode::Output, Pin, D10, D11, D12, D13};
+use arduino_hal::port::{mode::Output, Pin, D11, D12, D13};
 
 use crate::metrics::{Direction, Power};
 
-const FINAL_CODE: [u8; 4] = [
-    2, 6, 4, 3
+const FINAL_CODE: [u8; 3] = [
+    3, 6, 4,
 ];
 
 #[derive(uDebug, Clone, Copy)]
@@ -53,24 +53,22 @@ impl Stage {
 }
 
 pub struct Leds {
-    pub led0: Pin<Output, D10>,
-    pub led1: Pin<Output, D11>,
-    pub led2: Pin<Output, D12>,
-    pub led3: Pin<Output, D13>,
-    counts: [u8; 4],
+    pub led0: Pin<Output, D11>,
+    pub led1: Pin<Output, D12>,
+    pub led2: Pin<Output, D13>,
+    counts: [u8; 3],
     blink: bool,
 }
 
 impl Leds {
     pub fn new(
-        led0: Pin<Output, D10>,
-        led1: Pin<Output, D11>,
-        led2: Pin<Output, D12>,
-        led3: Pin<Output, D13>,
+        led0: Pin<Output, D11>,
+        led1: Pin<Output, D12>,
+        led2: Pin<Output, D13>,
     ) -> Self {
         Leds {
-            led0, led1, led2, led3,
-            counts: [0; 4],
+            led0, led1, led2,
+            counts: [0; 3],
             blink: false,
         }
     }
@@ -79,7 +77,6 @@ impl Leds {
         self.led0.set_low();
         self.led1.set_low();
         self.led2.set_low();
-        self.led3.set_low();
     }
 
     pub fn set(self: &mut Self, stage: Stage) {
@@ -94,7 +91,6 @@ impl Leds {
                     if self.counts[0] < FINAL_CODE[0] { self.led0.set_high(); done = false; }
                     if self.counts[1] < FINAL_CODE[1] { self.led1.set_high(); done = false; }
                     if self.counts[2] < FINAL_CODE[2] { self.led2.set_high(); done = false; }
-                    if self.counts[3] < FINAL_CODE[3] { self.led3.set_high(); done = false; }
                     for count in &mut self.counts {
                         *count = *count + 1;
                     }

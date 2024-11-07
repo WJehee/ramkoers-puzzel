@@ -22,12 +22,11 @@ fn main() -> ! {
     let servo = Servo::new(p.TC1);
 
     let mut leds = Leds::new(
-        pins.d10.into_output(),
         pins.d11.into_output(),
         pins.d12.into_output(),
         pins.d13.into_output(),
     );
-
+    
     let mut stage = Stage::Start;
     let mut prev_direction = Direction::North;
     let mut prev_power = Power::Low;
@@ -62,12 +61,11 @@ fn main() -> ! {
         }
 
         leds.set(stage);
-        //ufmt::uwriteln!(serial, "{:?} {:?} {:?} {:?}",
-        //    leds.led0.is_set_high(),
-        //    leds.led1.is_set_high(),
-        //    leds.led2.is_set_high(),
-        //    leds.led3.is_set_high(),
-        //).unwrap();
+        ufmt::uwriteln!(serial, "{:?} {:?} {:?}",
+            leds.led0.is_set_high(),
+            leds.led1.is_set_high(),
+            leds.led2.is_set_high(),
+        ).unwrap();
 
         arduino_hal::delay_ms(1000);
     }

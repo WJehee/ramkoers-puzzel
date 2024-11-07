@@ -8,7 +8,7 @@ This code runs one of the puzzles.
 - Steering: analog 0
 - Slider: analog 1
 - Servo: digital 9
-- LED's: digital 10-13
+- LED's: digital 11-13
 
 ## Thanks
 
