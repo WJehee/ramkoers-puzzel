@@ -20,28 +20,28 @@ impl Stage {
     pub fn transition(self: Self, direction: Direction, power: Power) -> Self {
         match self {
             Stage::Start => {
-                if direction == Direction::North {
+                if direction == Direction::North && power == Power::Full{
                     Stage::Step1
                 } else {
                     Stage::Start
                 }
             },
             Stage::Step1 => {
-                if direction == Direction::West {
+                if direction == Direction::West && power == Power::Half {
                     Stage::Step2
                 } else {
                     Stage::Start
                 }
             },
             Stage::Step2 => {
-                if direction == Direction::NorthEast {
+                if direction == Direction::NorthEast && power == Power::Full{
                     Stage::Step3
                 } else {
                     Stage::Start
                 }
             }
             Stage::Step3 => {
-                if direction == Direction::East {
+                if direction == Direction::East && power == Power::Half {
                     Stage::Complete
                 } else {
                     Stage::Start
@@ -75,7 +75,7 @@ impl Leds {
         }
     }
     
-    fn reset(self: &mut Self) {
+    fn clear(self: &mut Self) {
         self.led0.set_low();
         self.led1.set_low();
         self.led2.set_low();
@@ -84,7 +84,7 @@ impl Leds {
 
     pub fn set(self: &mut Self, stage: Stage) {
         match stage {
-            Stage::Start => self.reset(),
+            Stage::Start => self.clear(),
             Stage::Step1 => self.led0.set_high(),
             Stage::Step2 => self.led1.set_high(),
             Stage::Step3 => self.led2.set_high(),
@@ -104,7 +104,7 @@ impl Leds {
                         }
                     }
                 } else {
-                    self.reset();
+                    self.clear();
                 }
                 self.blink = !self.blink;
             },
