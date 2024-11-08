@@ -13,5 +13,5 @@ This code runs one of the puzzles.
 ## Thanks
 
 - [Rahix for avr-hal](https://github.com/Rahix/avr-hal)
-- [chrisjpalmer for the servo code](https://github.com/chrisjpalmer/rust-arduino-servo/tree/main)
+- [Floodplain for using PWM to control a servo](https://www.youtube.com/watch?v=-kRTRKL39pE)
 

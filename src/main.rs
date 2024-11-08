@@ -19,14 +19,14 @@ fn main() -> ! {
 
     let steering = pins.a0.into_analog_input(&mut adc);
     let slider = pins.a1.into_analog_input(&mut adc);
-    let servo = Servo::new(p.TC1);
+    let mut servo = Servo {pin: pins.d9.into_output()};
 
     let mut leds = Leds::new(
         pins.d11.into_output(),
         pins.d12.into_output(),
         pins.d13.into_output(),
     );
-    
+
     let mut stage = Stage::Start;
     let mut prev_direction = Direction::North;
     let mut prev_power = Power::Low;
