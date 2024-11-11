@@ -6,6 +6,7 @@ use crate::metrics::{Direction, Power};
 const FINAL_CODE: [u8; 3] = [
     3, 6, 4,
 ];
+const TIME: i8 = 5;
 
 #[derive(uDebug, Clone, Copy)]
 pub enum Stage {
@@ -57,7 +58,7 @@ pub struct Leds {
     pub led1: Pin<Output, D12>,
     pub led2: Pin<Output, D13>,
     counts: [u8; 3],
-    blink: bool,
+    blink: i8,
 }
 
 impl Leds {
@@ -69,7 +70,7 @@ impl Leds {
         Leds {
             led0, led1, led2,
             counts: [0; 3],
-            blink: false,
+            blink: -TIME,
         }
     }
     
@@ -86,7 +87,7 @@ impl Leds {
             Stage::Step2 => self.led1.set_high(),
             Stage::Step3 => self.led2.set_high(),
             Stage::Complete => {
-                if self.blink {
+                if self.blink == TIME  {
                     let mut done = true;
                     if self.counts[0] < FINAL_CODE[0] { self.led0.set_high(); done = false; }
                     if self.counts[1] < FINAL_CODE[1] { self.led1.set_high(); done = false; }
@@ -99,10 +100,11 @@ impl Leds {
                             *count = 0;
                         }
                     }
-                } else {
+                    self.blink = -TIME;
+                } else if self.blink == 0 {
                     self.clear();
                 }
-                self.blink = !self.blink;
+                self.blink += 1;
             },
         }
     }

@@ -31,7 +31,7 @@ fn main() -> ! {
     let mut prev_direction = Direction::North;
     let mut prev_power = Power::Low;
     let mut steps = 0;
-
+    
     loop {
         let value = steering.analog_read(&mut adc);
         let angle = map(value, 0, 1023, 0, 180);
@@ -54,20 +54,20 @@ fn main() -> ! {
         ufmt::uwriteln!(serial, "\rangle: {} -> {:?}, power: {} -> {:?}", angle, direction, speed, power).unwrap();
 
         // After 5 seconds in the same stage, check for transition
-        if steps == 5 {
+        if steps == 30 {
             stage = stage.transition(direction, power);
             steps = 0;
             ufmt::uwriteln!(serial, "\rstage: {:?}", stage).unwrap();
         }
 
         leds.set(stage);
-        ufmt::uwriteln!(serial, "{:?} {:?} {:?}",
-            leds.led0.is_set_high(),
-            leds.led1.is_set_high(),
-            leds.led2.is_set_high(),
-        ).unwrap();
+        //ufmt::uwriteln!(serial, "{:?} {:?} {:?}",
+        //    leds.led0.is_set_high(),
+        //    leds.led1.is_set_high(),
+        //    leds.led2.is_set_high(),
+        //).unwrap();
 
-        arduino_hal::delay_ms(1000);
+        arduino_hal::delay_ms(100);
     }
 }
 

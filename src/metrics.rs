@@ -12,15 +12,15 @@ pub enum Direction {
 impl Direction {
     pub fn from_angle(angle: u16) -> Self {
         if angle <= 36 {
-            Direction::East
+            Direction::West
         } else if angle <= 72 {
-            Direction::NorthEast
+            Direction::NorthWest
         } else if angle <= 108 {
             Direction::North
         } else if angle <= 144 {
-            Direction::NorthWest
+            Direction::NorthEast
         } else {
-            Direction::West
+            Direction::East
         }
     }
 }
